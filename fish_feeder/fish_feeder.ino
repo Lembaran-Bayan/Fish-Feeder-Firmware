@@ -29,11 +29,22 @@ void loop() {
   DateTime now = rtc.now();
 
   lcd.setCursor(0, 0);
+  if (now.hour() < 10) {
+    lcd.print("0");
+  }
   lcd.print(now.hour());
   lcd.print(':');
+  if (now.minute() < 10) {
+    lcd.print("0");
+  }
   lcd.print(now.minute());
+
   lcd.print(':');
+  if (now.second() < 10) {
+    lcd.print("0");
+  }
   lcd.print(now.second());
+
 
   delay(1000);
 }
