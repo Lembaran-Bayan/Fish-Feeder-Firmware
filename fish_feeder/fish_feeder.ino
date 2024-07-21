@@ -44,8 +44,7 @@ void setup() {
 
   if (rtc.lostPower()) {
     lcd.print("RTC lost power!");
-    rtc.
-    (DateTime(F(__DATE__), F(__TIME__)));
+    rtc.(DateTime(F(__DATE__), F(__TIME__)));
   }
 
 }
