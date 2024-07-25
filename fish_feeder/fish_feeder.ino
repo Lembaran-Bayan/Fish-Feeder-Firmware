@@ -75,9 +75,15 @@ void setup() {
 }
 
 void loop() {
-  // Display
   DateTime now = rtc.now();
 
+  // Run Motor and Servo on schedule
+  if (now.hour() == Time1.hour || now.hour() == Time2.hour) {
+    Serial.println("Time Trigger");
+    // TODO: code
+  }
+
+  // Display
   lcd.setCursor(0, 0);
   lcd.print("  ");
   if (now.hour() < 10) {
@@ -129,11 +135,10 @@ void loop() {
   if (reading8 == LOW) {
     if ((millis() - lastDebounceTime8) > debounceDelay) {
       Serial.println("Button on pin D8 pressed");
-      if(editIndex == 4) {
+      editIndex += 1;
+      if(editIndex > 4) {
         editIndex = 0;
-      } else {
-        editIndex += 1;
-      }
+      } 
       lastDebounceTime8 = millis();
     }
   }
