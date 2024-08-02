@@ -2,9 +2,13 @@
 #include <RTClib.h>
 #include <LiquidCrystal_I2C.h>
 #include <string.h>
+#include <Servo.h>
 
 RTC_DS3231 rtc;
 LiquidCrystal_I2C lcd(0x27, 16, 2); // Adjust the address (0x27) if needed
+Servo servo;
+int servoPin = 3;
+int motorPin = 5;
 
 struct {
   int hour = 0;
@@ -26,7 +30,6 @@ struct {
   }
 } Time1, Time2;
 
-int motorPower = 255;
 int servoAngle = 90;
 
 const int buttonPin8 = 8;
@@ -44,6 +47,7 @@ unsigned long lastDebounceTime6 = 0;
 const unsigned long debounceDelay = 200;
 
 int editIndex = 1;
+bool trigger = false;
 
 void setup() {
   Serial.begin(9600);
@@ -51,6 +55,8 @@ void setup() {
   pinMode(buttonPin8, INPUT_PULLUP);
   pinMode(buttonPin7, INPUT_PULLUP);
   pinMode(buttonPin6, INPUT_PULLUP);
+
+  servo.attach(servoPin);
 
   Wire.begin();
   lcd.init();
@@ -62,6 +68,7 @@ void setup() {
   }
 
   if (rtc.lostPower()) {
+  rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
     lcd.print("RTC lost power!");
   }
 
@@ -78,9 +85,33 @@ void loop() {
   DateTime now = rtc.now();
 
   // Run Motor and Servo on schedule
-  if (now.hour() == Time1.hour || now.hour() == Time2.hour) {
-    Serial.println("Time Trigger");
-    // TODO: code
+  if ((now.hour() == Time1.hour || now.hour() == Time2.hour) && now.minute() == 0 && now.second() == 0) {
+    Serial.println("Trigger state on");
+    trigger = true;
+  }
+  if ((now.hour() == Time1.hour || now.hour() == Time2.hour) && now.minute() == 0 && now.second() == 10) {
+    Serial.println("Trigger state off");
+    trigger = false;
+  }
+  if ((now.hour() == Time1.hour || now.hour() == Time2.hour) && now.minute() == 30 && now.second() == 0) {
+    Serial.println("Trigger state on");
+    trigger = true;
+  }
+  if ((now.hour() == Time1.hour || now.hour() == Time2.hour) && now.minute() == 30 && now.second() == 10) {
+    Serial.println("Trigger state off");
+    trigger = false;
+  }
+
+  // Motor and Servo Logic
+  if (trigger) {
+    analogWrite(motorPin, 255); // Start motor
+
+    delay(200); // Wait 200 ms
+
+    servo.write(100 - servoAngle); // Move servo to the calculated angle
+  } else {
+    analogWrite(motorPin, 0); // Stop motor
+    servo.write(100);         // Reset servo position
   }
 
   // Display
@@ -105,7 +136,7 @@ void loop() {
     lcd.print(" [1]");
   } else if (editIndex == 2) {
     lcd.print(" [2]");
-  }  else if(editIndex == 3) {
+  } else if (editIndex == 3) {
     lcd.print(" [3]");
   } else {
     lcd.print(" [4]");
@@ -117,12 +148,14 @@ void loop() {
   lcd.print(" ");
   lcd.print(Time2.getString());
   lcd.print(" ");
-  if(motorPower < 100) {
-    lcd.print("0");
-  }
-  lcd.print(String(motorPower));
-  lcd.print(" ");
   lcd.print(String(servoAngle));
+  lcd.print(" ");
+  if (!trigger) {
+    lcd.print("OFF");
+  } else {
+    lcd.print(" ");
+    lcd.print("ON");
+  }
 
   // Buttons
   int reading8 = digitalRead(buttonPin8);
@@ -136,9 +169,9 @@ void loop() {
     if ((millis() - lastDebounceTime8) > debounceDelay) {
       Serial.println("Button on pin D8 pressed");
       editIndex += 1;
-      if(editIndex > 4) {
+      if (editIndex > 4) {
         editIndex = 0;
-      } 
+      }
       lastDebounceTime8 = millis();
     }
   }
@@ -161,15 +194,12 @@ void loop() {
           Time2.hour = 23;
         }
       } else if (editIndex == 3) {
-        motorPower -= 10;
-        if (motorPower < 10) {
-          motorPower = 255;
-        } 
-      } else {
         servoAngle -= 10;
         if (servoAngle < 10) {
           servoAngle = 90;
         }
+      } else {
+        trigger = !trigger;
       }
       lastDebounceTime7 = millis();
     }
@@ -193,15 +223,12 @@ void loop() {
           Time2.hour = 0;
         }
       } else if (editIndex == 3) {
-        motorPower += 10;
-        if (motorPower > 255) {
-          motorPower = 10;
-        }
-      } else {
         servoAngle += 10;
         if (servoAngle > 90) {
           servoAngle = 10;
         }
+      } else {
+        trigger = !trigger;
       }
       lastDebounceTime6 = millis();
     }
