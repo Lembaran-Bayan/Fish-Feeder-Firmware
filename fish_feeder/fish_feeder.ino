@@ -108,7 +108,7 @@ void loop() {
 
     delay(200); // Wait 200 ms
 
-    servo.write(150 - servoAngle); // Move servo to the calculated angle
+    servo.write(120 - servoAngle); // Move servo to the calculated angle
   } else {
     analogWrite(motorPin, 0); // Stop motor
     servo.write(100);         // Reset servo position
