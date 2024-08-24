@@ -2,6 +2,8 @@
 
 Algorithm used in the fish feeder device for local fish farmers in Bayan
 
+![image](https://github.com/user-attachments/assets/fdce932d-2580-4515-8e07-666a9bec9fd0)
+
 ## Pseudocode
 ```
 Algorithm TriggerTime
